@@ -1,4 +1,6 @@
 import math
+import sys
+
 import torch
 import torch.nn.functional as F
 from torch import nn, einsum
@@ -16,7 +18,11 @@ if model_management.xformers_enabled():
     import xformers.ops
 
 if model_management.sage_attention_enabled():
-    from sageattention import sageattn
+    try:
+        from sageattention import sageattn
+    except ModuleNotFoundError:
+        logging.error(f"\n\nTo use the `--use-sage-attention` feature, the `sageattention` package must be installed first.\ncommand:\n\t{sys.executable} -m pip install sageattention")
+        exit(-1)
 
 from comfy.cli_args import args
 import comfy.ops
@@ -35,25 +41,10 @@ def exists(val):
     return val is not None
 
 
-def uniq(arr):
-    return{el: True for el in arr}.keys()
-
-
 def default(val, d):
     if exists(val):
         return val
     return d
-
-
-def max_neg_value(t):
-    return -torch.finfo(t.dtype).max
-
-
-def init_(tensor):
-    dim = tensor.shape[-1]
-    std = 1 / math.sqrt(dim)
-    tensor.uniform_(-std, std)
-    return tensor
 
 
 # feedforward

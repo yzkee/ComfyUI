@@ -1,3 +1,4 @@
+import importlib
 import logging
 import os
 import shutil
@@ -13,6 +14,8 @@ _DB_AVAILABLE = False
 Session = None
 WriteSession = None
 
+# The packages the imports below need; keep in step with them.
+_DEPENDENCIES = ("sqlalchemy", "alembic", "blake3")
 
 try:
     from alembic import command
@@ -46,6 +49,17 @@ def dependencies_available():
     Temporary function to check if the dependencies are available
     """
     return _DB_AVAILABLE
+
+
+def missing_dependencies():
+    """Names of the database packages that fail to import."""
+    missing = []
+    for name in _DEPENDENCIES:
+        try:
+            importlib.import_module(name)
+        except ImportError:
+            missing.append(name)
+    return missing
 
 
 def can_create_session():
